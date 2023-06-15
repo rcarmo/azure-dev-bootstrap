@@ -4,6 +4,7 @@ export STORAGE_GROUP?=dev-storage
 export LOCATION?=westeurope
 export COMPUTE_SKU=Standard_B8ms
 export COMPUTE_INSTANCE?=devbox
+export COMPUTE_DISK_SIZE?=128
 export COMPUTE_PRIORITY?=Regular # or Spot
 export COMPUTE_ARCHITECTURE?=x86_64 # or aarch64
 # want fast disks for this one

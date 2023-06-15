@@ -6,7 +6,7 @@ A quick hack to run an Azure Development Instance with a few tools pre-installed
 
 This is an Azure Resource Manager template that automatically deploys a development instance running Ubuntu 22.04 and a small set of development tools, namely `pyenv`, `nodenv`, Go and Docker CE.
 
-The template defaults to deploying a `Standard_B4ms` VM with a relatively large Premium SSD disk size (P10, 128GB). It also deploys (and mounts) an Azure File Share on the machine with (very) permissive access at `/srv`, which makes it quite easy to keep copies of your work between VM instantiations.
+The template defaults to deploying a `Standard_B8ms` VM with a relatively large Premium SSD disk size (P10, 128GB). It also deploys (and mounts) an Azure File Share on the machine with (very) permissive access at `/srv`, which makes it quite easy to keep copies of your work between VM instantiations.
 
 ## Why
 

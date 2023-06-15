@@ -84,6 +84,9 @@ params = {
     "instanceSize": {
         "value": environ.get('COMPUTE_SKU', 'Standard_B4ms').strip()
     },
+    "diskSizeGB": {
+        "value": int(environ.get('COMPUTE_DISK_SIZE', 128)) 
+    },
     "instancePrefix": {
         "value": environ.get('COMPUTE_INSTANCE', 'ubuntu').strip()
     },
