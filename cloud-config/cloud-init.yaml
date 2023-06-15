@@ -47,25 +47,30 @@ write_files:
       usermod -aG docker ${AZURE_ADMIN_USERNAME}
       
       # Everything from here on down is run as a regular user
-
+      
       sudo -i -u ${AZURE_ADMIN_USERNAME} bash << EOF
       cd
       echo "--> Setting up pyenv"
       git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-      echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-      echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-      echo 'eval "$(pyenv init -)"' >> ~/.bashrc
 
       echo "--> Setting up nodenv"
-      echo 'export NODENV_ROOT="$HOME/.nodenv"' >> ~/.bashrc
-      echo 'command -v nodenv >/dev/null || export PATH="$NODENV_ROOT/bin:$PATH"' >> ~/.bashrc
-      echo 'eval "$(nodenv init -)"' >> ~/.bashrc
       git clone https://github.com/nodenv/nodenv.git ~/.nodenv
       mkdir -p ~/.nodenv/plugins
       git clone https://github.com/nodenv/node-build.git ~/.nodenv/plugins/node-build
       EOF
 
       echo "==> Preflight done."
+
+  - path: /home/${AZURE_ADMIN_USERNAME}/.bash_profile
+    permissions: 0755
+    owner: ${AZURE_ADMIN_USERNAME}:${AZURE_ADMIN_USERNAME}
+    content: |
+      export PYENV_ROOT="$HOME/.pyenv"
+      export PATH="$PYENV_ROOT/bin:$PATH"
+      eval "$(pyenv init -)"
+      export NODENV_ROOT="$HOME/.nodenv"
+      export PATH="$NODENV_ROOT/bin:$PATH"
+      eval "$(nodenv init -)"
 
   - path: /etc/waagent.conf
     permissions: 0444
