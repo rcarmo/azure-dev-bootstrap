@@ -15,7 +15,7 @@ export TIMESTAMP=`date "+%Y-%m-%d-%H-%M-%S"`
 export FILE_SHARES=data
 export STORAGE_ACCOUNT_NAME?=shared0$(shell echo $(COMPUTE_FQDN)|md5sum|base64|tr '[:upper:]' '[:lower:]'|cut -c -16)
 export SHARE_NAME?=data
-export SSH_PORT?=22
+export COMPUTE_SSH_PORT?=22
 # This will set both your management and ingress NSGs to your public IP address 
 # - since using "*" in an NSG may be disabled by policy
 export APPLY_ORIGIN_NSG?=true
@@ -28,7 +28,7 @@ SSH_KEY_FILES:=$(COMPUTE_ADMIN_USERNAME).pem $(COMPUTE_ADMIN_USERNAME).pub
 SSH_KEY:=$(COMPUTE_ADMIN_USERNAME).pem
 
 # Do not output warnings, do not validate or add remote host keys (useful when doing successive deployments or going through the load balancer)
-SSH_TO_INSTANCE:=ssh -p $(SSH_PORT) -q -A -i keys/$(SSH_KEY) $(COMPUTE_ADMIN_USERNAME)@$(COMPUTE_FQDN) -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+SSH_TO_INSTANCE:=ssh -p $(COMPUTE_SSH_PORT) -q -A -i keys/$(SSH_KEY) $(COMPUTE_ADMIN_USERNAME)@$(COMPUTE_FQDN) -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
 
 .PHONY: deploy-storage deploy-compute redeploy destroy-compute destroy-storage destroy-environment
 .DEFAULT_GOAL := help

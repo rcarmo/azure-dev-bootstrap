@@ -6,14 +6,14 @@ write_files:
   - path: /etc/ssh/sshd_config
     append: true
     content: |
-      Port ${SSH_PORT}
+      Port ${COMPUTE_SSH_PORT}
       Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
 
   - path: /etc/fail2ban/jail.d/defaults-debian.conf
     content: |
       [sshd]
       enabled = true
-      port = ${SSH_PORT}
+      port = ${COMPUTE_SSH_PORT}
 
   - path: /root/preflight.sh
     permissions: 0755

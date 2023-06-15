@@ -78,7 +78,7 @@ params = {
         "value": admin_public_key
     },
     "instanceSSHPort": { 
-        "value": int(environ.get('SSH_PORT', 22))
+        "value": int(environ.get('COMPUTE_SSH_PORT', 22))
     },
     "instanceManagementAllowedSourceAddressPrefixes": { 
         "value": allowed_management_ips
