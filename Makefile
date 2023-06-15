@@ -12,8 +12,7 @@ export AZURE_STORAGE?=Premium_LRS
 export AZURE_FQDN=$(COMPUTE_GROUP)-$(AZURE_INSTANCE).$(LOCATION).cloudapp.azure.com
 export AZURE_ADMIN_USERNAME?=me
 export TIMESTAMP=`date "+%Y-%m-%d-%H-%M-%S"`
-export FILE_SHARES=data
-export AZURE_STORAGE_ACCOUNT_NAME?=shared0$(shell echo $(AZURE_FQDN)|md5sum|base64|tr '[:upper:]' '[:lower:]'|cut -c -16)
+export AZURE_STORAGE_ACCOUNT_NAME?=shared0$(shell echo $(AZURE_FQDN)|openssl dgst -md5|base64|tr '[:upper:]' '[:lower:]'|cut -c -16)
 export AZURE_SHARE_NAME?=data
 export AZURE_SSH_PORT?=22
 # This will set both your management and ingress NSGs to your public IP address 
@@ -54,7 +53,7 @@ keys: ## Generate an SSH key for initial access
 params: ## Generate the Azure Resource Template parameter files
 	$(eval AZURE_STORAGE_ACCOUNT_KEY := $(shell az storage account keys list \
 		--resource-group $(STORAGE_GROUP) \
-	    	--account-name $(AZURE_STORAGE_ACCOUNT_NAME) \
+	    --account-name $(AZURE_STORAGE_ACCOUNT_NAME) \
 		--query "[0].value" \
 		--output tsv | tr -d '"'))
 	@mkdir parameters 2> /dev/null; AZURE_STORAGE_ACCOUNT_KEY=$(AZURE_STORAGE_ACCOUNT_KEY) python3 genparams.py > parameters/compute.json
@@ -71,8 +70,7 @@ deploy-storage: ## Deploy the storage account and create file shares
 		--https-only \
 		--allow-blob-public-access false \
 		--output table
-	$(foreach SHARE_NAME, $(FILE_SHARES), \
-		az storage share create --account-name $(AZURE_STORAGE_ACCOUNT_NAME) --name $(AZURE_SHARE_NAME) --output tsv;)
+	-az storage share create --account-name $(AZURE_STORAGE_ACCOUNT_NAME) --name $(AZURE_SHARE_NAME) --output tsv;
 
 deploy-compute: ## Deploy the compute instance
 	-az group create --name $(COMPUTE_GROUP) --location $(LOCATION) --output table 
@@ -111,8 +109,7 @@ ssh: ## SSH to the instance using the public IP address and our SSH key
 
 tail-cloud-init: ## Tail cloud-init logs as it runs
 	-cat keys/$(AZURE_ADMIN_USERNAME).pem | ssh-add -k -
-	$(SSH_TO_MASTER) \
-	sudo tail -f /var/log/cloud-init*
+	$(SSH_TO_INSTANCE) sudo tail -f /var/log/cloud-init*
 
 view-deployment: ## View deployment details (as table)
 	az deployment operation group list \

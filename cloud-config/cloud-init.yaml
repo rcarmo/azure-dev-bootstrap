@@ -36,7 +36,7 @@ write_files:
       echo "--> Installing Tailscale"
       # Note: this is handy for easier remote access
       curl -fsSL https://tailscale.com/install.sh | sh
-      tailscale up --authkey ${COMPUTE_TAILSCALE_AUTHKEY}
+      tailscale up --authkey ${AZURE_TAILSCALE_AUTHKEY}
 
       echo "--> Installing Docker CE"
       curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -44,11 +44,11 @@ write_files:
       echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
       apt-get update
       apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-      usermod -aG docker ${COMPUTE_ADMIN_USERNAME}
+      usermod -aG docker ${AZURE_ADMIN_USERNAME}
       
       # Everything from here on down is run as a regular user
 
-      sudo -i -u ${COMPUTE_ADMIN_USERNAME} bash << EOF
+      sudo -i -u ${AZURE_ADMIN_USERNAME} bash << EOF
       cd
       echo "--> Setting up pyenv"
       git clone https://github.com/pyenv/pyenv.git ~/.pyenv
