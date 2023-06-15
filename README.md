@@ -46,7 +46,7 @@ I needed a baseline template for remote development sandboxes, and I wanted it d
 az login
 make keys
 make deploy-storage
-COMPUTE_TAILSCALE_AUTHKEY=<your auth key> make params
+AZURE_TAILSCALE_AUTHKEY=<your auth key> make params
 make deploy-compute
 make view-deployment
 # Go to the Azure portal and check the deployment progress

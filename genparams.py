@@ -7,7 +7,7 @@ from sys import stderr, stdout
 from string import Template
 from urllib.request import urlopen
 
-PREFIX = "COMPUTE_"
+PREFIX = "AZURE_"
 
 def slurp(filename, as_template=True):
     # Make sure we only replace variables that start with COMPUTE_

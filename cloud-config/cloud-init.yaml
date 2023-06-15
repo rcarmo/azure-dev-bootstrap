@@ -1,19 +1,19 @@
 #cloud-config
 
-# **WARNING**: This is a template. Strings with ${COMPUTE_...}s and $COMPUTE_... will be replaced.
+# **WARNING**: This is a template. Strings with ${AZURE_...}s and $AZURE_... will be replaced.
 
 write_files:
   - path: /etc/ssh/sshd_config
     append: true
     content: |
-      Port ${COMPUTE_SSH_PORT}
+      Port ${AZURE_SSH_PORT}
       Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
 
   - path: /etc/fail2ban/jail.d/defaults-debian.conf
     content: |
       [sshd]
       enabled = true
-      port = ${COMPUTE_SSH_PORT}
+      port = ${AZURE_SSH_PORT}
 
   - path: /root/preflight.sh
     permissions: 0755
@@ -76,10 +76,10 @@ write_files:
       ResourceDisk.SwapSizeMB=2048
 
 mounts:
-  - - //${STORAGE_ACCOUNT_NAME}.file.core.windows.net/${SHARE_NAME}
+  - - //${AZURE_STORAGE_ACCOUNT_NAME}.file.core.windows.net/${AZURE_SHARE_NAME}
     - /srv
     - cifs
-    - vers=3.0,username=${STORAGE_ACCOUNT_NAME},password=${STORAGE_ACCOUNT_KEY},dir_mode=0770,file_mode=0660,uid=1000,gid=1000,noperm,noatime,mfsymlinks,iocharset=utf8
+    - vers=3.0,username=${AZURE_STORAGE_ACCOUNT_NAME},password=${AZURE_STORAGE_ACCOUNT_KEY},dir_mode=0770,file_mode=0660,uid=1000,gid=1000,noperm,noatime,mfsymlinks,iocharset=utf8
 
 packages:
   # 
