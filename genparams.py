@@ -7,9 +7,11 @@ from sys import stderr, stdout
 from string import Template
 from urllib.request import urlopen
 
+PREFIX = "COMPUTE_"
+
 def slurp(filename, as_template=True):
     # Make sure we only replace variables that start with COMPUTE_
-    TEMPLATE_VALUES = {k: v for k, v in environ.items() if k.startswith("COMPUTE_")}
+    TEMPLATE_VALUES = {k: v for k, v in environ.items() if k.startswith(PREFIX)}
 
     with open(f"cloud-config/{filename}", "r") as config:
         if as_template:
@@ -22,7 +24,7 @@ def slurp(filename, as_template=True):
             debug.write(buffer)
     return b64encode(bytes(buffer, 'utf-8')).decode()
 
-ADMIN_USERNAME = environ['COMPUTE_ADMIN_USERNAME']
+ADMIN_USERNAME = environ[f'{PREFIX}ADMIN_USERNAME']
 OWN_PUBKEY = join(environ['HOME'],'.ssh','id_rsa.pub')
 GEN_PUBKEY = 'keys/' + ADMIN_USERNAME + '.pub'
 
@@ -66,8 +68,8 @@ if (environ.get('APPLY_CLOUDFLARE_NSG','false').lower() == 'true'):
 else:
     allowed_ingress_ips = allowed_management_ips
 
-if (environ.get('COMPUTE_TAILSCALE_AUTHKEY','false').lower() == 'false'):
-    stderr.write('Warning: no Tailscale authkey specified in COMPUTE_TAILSCALE_AUTHKEY, exiting.\n')
+if (environ.get(f'{PREFIX}TAILSCALE_AUTHKEY','false').lower() == 'false'):
+    stderr.write(f'Warning: no Tailscale authkey specified in {PREFIX}TAILSCALE_AUTHKEY, exiting.\n')
     exit(1)
 
 params = {
@@ -78,7 +80,7 @@ params = {
         "value": admin_public_key
     },
     "instanceSSHPort": { 
-        "value": int(environ.get('COMPUTE_SSH_PORT', 22))
+        "value": int(environ.get(f'{PREFIX}SSH_PORT', 22))
     },
     "instanceManagementAllowedSourceAddressPrefixes": { 
         "value": allowed_management_ips
@@ -88,22 +90,22 @@ params = {
         "value": slurp("cloud-init.yaml") 
     },
     "instanceSize": {
-        "value": environ.get('COMPUTE_SKU', 'Standard_B4ms').strip()
+        "value": environ.get(f'{PREFIX}SKU', 'Standard_B4ms').strip()
     },
     "diskSizeGB": {
-        "value": int(environ.get('COMPUTE_DISK_SIZE', 128)) 
+        "value": int(environ.get(f'{PREFIX}DISK_SIZE', 128)) 
     },
     "instancePrefix": {
-        "value": environ.get('COMPUTE_INSTANCE', 'ubuntu').strip()
+        "value": environ.get(f'{PREFIX}INSTANCE', 'ubuntu').strip()
     },
     "instanceArchitecture": {
-        "value": environ.get('COMPUTE_ARCHITECTURE', 'x86_64').strip()
+        "value": environ.get(f'{PREFIX}ARCHITECTURE', 'x86_64').strip()
     },
     "instancePriority": {
-        "value": environ.get('COMPUTE_PRIORITY', 'Regular').strip()
+        "value": environ.get(f'{PREFIX}PRIORITY', 'Regular').strip()
     },
     "diskType": {
-        "value": environ.get('COMPUTE_STORAGE', 'Standard_LRS').strip()
+        "value": environ.get(f'{PREFIX}STORAGE', 'Standard_LRS').strip()
     }
 }
 
