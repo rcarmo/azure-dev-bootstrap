@@ -9,7 +9,7 @@ export AZURE_PRIORITY?=Regular # or Spot
 export AZURE_ARCHITECTURE?=x86_64 # or aarch64
 # want fast disks for this one
 export AZURE_STORAGE?=Premium_LRS
-export AZURE_FQDN=$(AZURE_GROUP)-$(AZURE_INSTANCE).$(LOCATION).cloudapp.azure.com
+export AZURE_FQDN=$(COMPUTE_GROUP)-$(AZURE_INSTANCE).$(LOCATION).cloudapp.azure.com
 export AZURE_ADMIN_USERNAME?=me
 export TIMESTAMP=`date "+%Y-%m-%d-%H-%M-%S"`
 export FILE_SHARES=data
