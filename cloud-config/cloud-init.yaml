@@ -1,0 +1,115 @@
+#cloud-config
+
+write_files:
+  - path: /etc/ssh/sshd_config
+    append: true
+    content: |
+      Port ${SSH_PORT}
+      Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+
+  - path: /etc/fail2ban/jail.d/defaults-debian.conf
+    content: |
+      [sshd]
+      enabled = true
+      port = ${SSH_PORT}
+
+  - path: /root/preflight.sh
+    permissions: 0755
+    content: |
+      #!/bin/bash
+      . /etc/environment
+      echo "--> Removing snapd so it doesn't cause extra load on smaller VMs"
+      apt-get purge -y snapd unattended-upgrades
+      rm -rf /snap /var/snap /var/lib/snapd /var/log/unattended-upgrades
+      echo "--> Package updates"
+      apt-get update
+      apt-get dist-upgrade -y
+      apt-get autoremove -y
+
+      echo "--> Setting up scratch"
+      # Make sure we can write to the temporary SSD storage
+      mkdir -p /mnt/scratch
+      chmod a+w /mnt/scratch
+      
+      echo "--> Installing Tailscale"
+      # Note: this is handy for easier remote access
+      curl -fsSL https://tailscale.com/install.sh | sh
+      tailscale up --authkey ${TAILSCALE_AUTHKEY}
+
+      echo "--> Installing Docker CE"
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      chmod a+r /etc/apt/keyrings/docker.gpg 
+      echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+          "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+          tee /etc/apt/sources.list.d/docker.list > /dev/null
+      apt-get update
+      apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      usermod -aG docker ${ADMIN_USERNAME}
+      
+      # Everything from here on down is run as a regular user
+      
+      sudo -i -u ${ADMIN_USERNAME} bash << EOF
+      cd
+      echo "--> Setting up pyenv"
+      git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+      echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+      echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+      echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+
+      echo "--> Setting up nodenv"
+      echo 'export NODENV_ROOT="$HOME/.nodenv"' >> ~/.bashrc
+      echo 'command -v nodenv >/dev/null || export PATH="$NODENV_ROOT/bin:$PATH"' >> ~/.bashrc
+      echo 'eval "$(nodenv init -)"' >> ~/.bashrc
+      git clone https://github.com/nodenv/nodenv.git ~/.nodenv
+      mkdir -p ~/.nodenv/plugins
+      git clone https://github.com/nodenv/node-build.git ~/.nodenv/plugins/node-build
+      EOF
+
+      echo "==> Preflight done."
+
+  - path: /etc/waagent.conf
+    permissions: 0444
+    content: |
+      ResourceDisk.Format=y
+      ResourceDisk.Filesystem=ext4
+      ResourceDisk.EnableSwap=y
+      ResourceDisk.SwapSizeMB=2048
+
+mounts:
+  - - //${STORAGE_ACCOUNT_NAME}.file.core.windows.net/${SHARE_NAME}
+    - /srv
+    - cifs
+    - vers=3.0,username=${STORAGE_ACCOUNT_NAME},password=${STORAGE_ACCOUNT_KEY},dir_mode=0770,file_mode=0660,uid=1000,gid=1000,noperm,noatime,mfsymlinks,iocharset=utf8
+
+packages:
+  # 
+  # general
+  - fail2ban
+  - make
+  - git
+  - python3-dev
+  - python3-pip
+  - build-essential
+  - golang
+  # pyenv dependencies
+  - libbz2-dev
+  - libffi-dev
+  - libreadline-dev
+  - libsqlite3-dev
+  - libssl-dev
+  - lzma-dev
+  - zlib1g-dev
+  # CLI tools
+  - net-tools
+  - sqlite3
+  - curl
+  - htop
+  - sudo
+  - tmux
+  - vim
+  - wget
+  - zsh
+
+runcmd:
+  - /root/preflight.sh
+  - reboot
