@@ -8,15 +8,21 @@ from string import Template
 from urllib.request import urlopen
 
 def slurp(filename, as_template=True):
-    with open("cloud-config/" + filename, "r") as config:
+    # Make sure we only replace variables that start with COMPUTE_
+    TEMPLATE_VALUES = {k: v for k, v in environ.items() if k.startswith("COMPUTE_")}
+
+    with open(f"cloud-config/{filename}", "r") as config:
         if as_template:
-            # parse a YAML file and replace ${VALUE}s
-            buffer = Template(config.read()).safe_substitute(environ)
+            # parse a YAML file and replace ${VALUE}s (and $VALUEs) 
+            buffer = Template(config.read()).safe_substitute(TEMPLATE_VALUES)
         else:
             buffer = config.read()
+        # Save a copy of the generated file for debugging
+        with open(f"parameters/{filename}", "w") as debug:
+            debug.write(buffer)
     return b64encode(bytes(buffer, 'utf-8')).decode()
 
-ADMIN_USERNAME = environ['ADMIN_USERNAME']
+ADMIN_USERNAME = environ['COMPUTE_ADMIN_USERNAME']
 OWN_PUBKEY = join(environ['HOME'],'.ssh','id_rsa.pub')
 GEN_PUBKEY = 'keys/' + ADMIN_USERNAME + '.pub'
 
@@ -60,8 +66,8 @@ if (environ.get('APPLY_CLOUDFLARE_NSG','false').lower() == 'true'):
 else:
     allowed_ingress_ips = allowed_management_ips
 
-if (environ.get('TAILSCALE_AUTHKEY','false').lower() == 'false'):
-    stderr.write('Warning: no Tailscale authkey specified in TAILSCALE_AUTHKEY, exiting.\n')
+if (environ.get('COMPUTE_TAILSCALE_AUTHKEY','false').lower() == 'false'):
+    stderr.write('Warning: no Tailscale authkey specified in COMPUTE_TAILSCALE_AUTHKEY, exiting.\n')
     exit(1)
 
 params = {

@@ -10,7 +10,7 @@ export COMPUTE_ARCHITECTURE?=x86_64 # or aarch64
 # want fast disks for this one
 export COMPUTE_STORAGE?=Premium_LRS
 export COMPUTE_FQDN=$(COMPUTE_GROUP)-$(COMPUTE_INSTANCE).$(LOCATION).cloudapp.azure.com
-export ADMIN_USERNAME?=me
+export COMPUTE_ADMIN_USERNAME?=me
 export TIMESTAMP=`date "+%Y-%m-%d-%H-%M-%S"`
 export FILE_SHARES=data
 export STORAGE_ACCOUNT_NAME?=shared0$(shell echo $(COMPUTE_FQDN)|md5sum|base64|tr '[:upper:]' '[:lower:]'|cut -c -16)
@@ -24,11 +24,11 @@ export SHELL=/bin/bash
 # Permanent local overrides
 -include .env
 
-SSH_KEY_FILES:=$(ADMIN_USERNAME).pem $(ADMIN_USERNAME).pub
-SSH_KEY:=$(ADMIN_USERNAME).pem
+SSH_KEY_FILES:=$(COMPUTE_ADMIN_USERNAME).pem $(COMPUTE_ADMIN_USERNAME).pub
+SSH_KEY:=$(COMPUTE_ADMIN_USERNAME).pem
 
 # Do not output warnings, do not validate or add remote host keys (useful when doing successive deployments or going through the load balancer)
-SSH_TO_INSTANCE:=ssh -p $(SSH_PORT) -q -A -i keys/$(SSH_KEY) $(ADMIN_USERNAME)@$(COMPUTE_FQDN) -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+SSH_TO_INSTANCE:=ssh -p $(SSH_PORT) -q -A -i keys/$(SSH_KEY) $(COMPUTE_ADMIN_USERNAME)@$(COMPUTE_FQDN) -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
 
 .PHONY: deploy-storage deploy-compute redeploy destroy-compute destroy-storage destroy-environment
 .DEFAULT_GOAL := help
@@ -47,8 +47,8 @@ list-sizes: ## List all VM sizes in the current location
 
 keys: ## Generate an SSH key for initial access
 	mkdir keys
-	ssh-keygen -b 2048 -t rsa -f keys/$(ADMIN_USERNAME) -q -N ""
-	mv keys/$(ADMIN_USERNAME) keys/$(ADMIN_USERNAME).pem
+	ssh-keygen -b 2048 -t rsa -f keys/$(COMPUTE_ADMIN_USERNAME) -q -N ""
+	mv keys/$(COMPUTE_ADMIN_USERNAME) keys/$(COMPUTE_ADMIN_USERNAME).pem
 	chmod 0600 keys/*
 
 params: ## Generate the Azure Resource Template parameter files
@@ -105,12 +105,12 @@ destroy-storage: ## Destroy the storage resource group and storage account
 		--no-wait
 
 ssh: ## SSH to the instance using the public IP address and our SSH key
-	-cat keys/$(ADMIN_USERNAME).pem | ssh-add -k -
+	-cat keys/$(COMPUTE_ADMIN_USERNAME).pem | ssh-add -k -
 	$(SSH_TO_INSTANCE) \
 	-L 3390:localhost:3389
 
 tail-cloud-init: ## Tail cloud-init logs as it runs
-	-cat keys/$(ADMIN_USERNAME).pem | ssh-add -k -
+	-cat keys/$(COMPUTE_ADMIN_USERNAME).pem | ssh-add -k -
 	$(SSH_TO_MASTER) \
 	sudo tail -f /var/log/cloud-init*
 
