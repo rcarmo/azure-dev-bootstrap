@@ -15,7 +15,8 @@ write_files:
       enabled = true
       port = ${AZURE_SSH_PORT}
 
-  - path: /root/preflight.sh
+  ##
+  - path: /root/postflight.sh
     permissions: 0755
     content: |
       #!/bin/bash
@@ -45,6 +46,12 @@ write_files:
       apt-get update
       apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
       usermod -aG docker ${AZURE_ADMIN_USERNAME}
+
+      # X11 setup (optional)
+      #update-alternatives --set x-window-manager /usr/bin/xfwm4
+      #update-alternatives --set x-default-session /usr/bin/xfce4-session
+      #update-alternatives --set x-session-manager /usr/bin/xfce4-session
+      #update-alternatives --install x-terminal-emulator /usr/bin/xfce4-terminal
       
       # Everything from here on down is run as a regular user
       
@@ -57,20 +64,31 @@ write_files:
       git clone https://github.com/nodenv/nodenv.git ~/.nodenv
       mkdir -p ~/.nodenv/plugins
       git clone https://github.com/nodenv/node-build.git ~/.nodenv/plugins/node-build
+      cat /tmp/.bashrc >> /home/${AZURE_ADMIN_USERNAME}/.bashrc
       EOF
+      echo "==> Postflight done."
 
-      echo "==> Preflight done."
-
-  - path: /home/${AZURE_ADMIN_USERNAME}/.bash_profile
+  # Add a .bashrc stub to /tmp
+  # this is preferrable because if we try to add or append it directly 
+  # via cloud-init then /etc/skel may not get copied over to the user home
+  
+  - path: /tmp/.bashrc
     permissions: 0755
     owner: ${AZURE_ADMIN_USERNAME}:${AZURE_ADMIN_USERNAME}
     content: |
+      # bind pyenv to shell environment      
       export PYENV_ROOT="$HOME/.pyenv"
       export PATH="$PYENV_ROOT/bin:$PATH"
       eval "$(pyenv init -)"
+      
+      # bind nodenv to shell environment
       export NODENV_ROOT="$HOME/.nodenv"
       export PATH="$NODENV_ROOT/bin:$PATH"
       eval "$(nodenv init -)"
+      
+      # Locally installed binaries (from system pip)
+      export PATH="$HOME/.local/bin:$PATH"
+            
 
   - path: /etc/waagent.conf
     permissions: 0444
@@ -87,13 +105,13 @@ mounts:
     - vers=3.0,username=${AZURE_STORAGE_ACCOUNT_NAME},password=${AZURE_STORAGE_ACCOUNT_KEY},dir_mode=0770,file_mode=0660,uid=1000,gid=1000,noperm,noatime,mfsymlinks,iocharset=utf8
 
 packages:
-  # 
   # general
   - fail2ban
   - make
   - git
   - python3-dev
   - python3-pip
+  - python3-venv
   - build-essential
   - golang
   # pyenv dependencies
@@ -111,10 +129,30 @@ packages:
   - htop
   - sudo
   - tmux
+  - unzip
   - vim
   - wget
   - zsh
+  # GUI (optional)
+  #- xrdp
+  #- xorgxrdp
+  #- openssh-server
+  #- fonts-inter
+  #- fonts-firacode
+  #- ttf-mscorefonts-installer
+  #- xfce4
+  #- xfce4-terminal
+  #- xfce4-appmenu-plugin
+  # Qt baseline (optional GUI add-on)
+  #- qt5ct
+  #- qutebrowser
+  #- qt5-style-kvantum
+  #- qt5-gtk-platformtheme
+  #- qt6-gtk-platformtheme
+  # Additions (optional)
+  #- avahi-daemon
+  #- weasyprint
 
 runcmd:
-  - /root/preflight.sh
+  - /root/postflight.sh
   - reboot
