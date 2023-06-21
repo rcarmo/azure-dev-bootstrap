@@ -8,7 +8,7 @@ This is an Azure Resource Manager template that automatically deploys a developm
 
 The template defaults to deploying a `Standard_B8ms` VM with a relatively large Premium SSD disk size (P10, 128GB). It also deploys (and mounts) an Azure File Share on the machine with (very) permissive access at `/srv`, which makes it quite easy to keep copies of your work between VM instantiations.
 
-After the first login, you can add your own SSH key and remove both the public IP address and the NSG rule that allows SSH access (which defaults to your current outbound public IPv4 address) and use [TailScale](https://tailscale.com) to access the instance.
+After the first login, you can add your own SSH key (do _not_ use the generated one other than for initial login - it won't pollute your config, and is meant for single-shot use) and remove both the public IP address and the NSG rule that allows SSH access (which defaults to your current outbound public IPv4 address) and use [TailScale](https://tailscale.com) to access the instance.
 
 ## Why
 
