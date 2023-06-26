@@ -33,6 +33,9 @@ write_files:
       # Make sure we can write to the temporary SSD storage
       mkdir -p /mnt/scratch
       chmod a+w /mnt/scratch
+
+      echo "--> Setting up Azure CLI"
+      curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
       
       echo "--> Installing Tailscale"
       # Note: this is handy for easier remote access
@@ -105,6 +108,12 @@ mounts:
     - vers=3.0,username=${AZURE_STORAGE_ACCOUNT_NAME},password=${AZURE_STORAGE_ACCOUNT_KEY},dir_mode=0770,file_mode=0660,uid=1000,gid=1000,noperm,noatime,mfsymlinks,iocharset=utf8
 
 packages:
+  # bootstrapping
+  - ca-certificates
+  - apt-transport-https
+  - gnupg
+  - lsb-release
+  - gnupg
   # general
   - fail2ban
   - make
